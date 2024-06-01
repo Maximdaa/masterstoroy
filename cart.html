@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина</title>
+    <link rel="stylesheet" href="style2.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ваша корзина</h1>
+        <nav>
+            <ul>
+                <li><a href="main.html">Главная</a></li>
+                <li><a href="aboutus.html">Контакты</a></li>
+                <li><a href="cart.html" class="cart-button">Корзина</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="cart-container">
+        <div class="cart-items">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items-table"></tbody>
+            </table>
+        </div>
+        <div class="cart-summary">
+            <h2>Итог</h2>
+            <p>Товары (<span id="total-items">0</span>)</p>
+            <p class="cart-total">Итого: <span id="total-price">0</span> ₽</p>
+            <button class="checkout-button">Перейти к оформлению</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Продажа строительных материалов</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const authInfo = JSON.parse(localStorage.getItem('user'));
+            if (authInfo) {
+                loadCart(authInfo.client_id);
+            } else {
+                // Добавьте обработку случая, когда информация об аутентификации отсутствует в localStorage
+                console.error('Информация об аутентификации не найдена в localStorage');
+            }
+
+            // Определение других функций и обработчиков событий
+        });
+
+
+            function loadCart(clientId) {
+                fetch(`/cart?client_id=${clientId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const cartTable = document.getElementById('cart-items-table');
+                        cartTable.innerHTML = ''; // Очищаем таблицу перед обновлением
+
+                        let totalItems = 0;
+                        let totalPrice = 0;
+
+                        data.forEach(item => {
+                            totalItems += parseInt(item.quantity);
+                            totalPrice += item.product_price * parseInt(item.quantity);
+
+                            const listItem = document.createElement('tr');
+                            listItem.className = 'cart-item';
+                            listItem.innerHTML = `
+                                <td class="cart-item-details">
+                                    <img src="${item.product_image}.jpg" alt="${item.product_name}">
+                                    <h3>${item.product_name}</h3>
+                                </td>
+                                <td>
+                                    <input type="number" value="${item.quantity}" min="1" data-id="${item.product_id}" class="quantity-input">
+                                </td>
+                                <td>${item.product_price} ₽</td>
+                                <td>${item.product_price * item.quantity} ₽</td>
+                                <td class="cart-item-actions">
+                                    <button onclick="removeItem(${item.product_id})">Удалить</button>
+                                </td>
+                            `;
+                            cartTable.appendChild(listItem);
+                        });
+
+                        document.getElementById('total-items').textContent = totalItems;
+                        document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+
+                        // Добавляем слушатели событий на инпуты количества
+                        document.querySelectorAll('.quantity-input').forEach(input => {
+                            input.addEventListener('change', (event) => {
+                                const productId = event.target.getAttribute('data-id');
+                                const newQuantity = event.target.value;
+                                updateQuantity(productId, newQuantity);
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при загрузке корзины:', error);
+                    });
+            }
+
+            function updateQuantity(productId, newQuantity) {
+                const authInfo = JSON.parse(localStorage.getItem('user'));
+                fetch('/update-cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: authInfo.client_id,
+                        product_id: productId,
+                        quantity: newQuantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Количество обновлено успешно');
+                        loadCart(authInfo.client_id); // Обновить корзину после изменения количества
+                    } else {
+                        console.error('Ошибка при обновлении количества');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке запроса:', error);
+                });
+            }
+
+            window.removeItem = function(productId) {
+                const authInfo = JSON.parse(localStorage.getItem('user'));
+                fetch('/remove-from-cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: authInfo.client_id,
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Товар удален успешно');
+                        loadCart(authInfo.client_id); // Обновить корзину после удаления товара
+                    } else {
+                        console.error('Ошибка при удалении товара');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке запроса:', error);
+                });
+            }
+
+            
+        
+    </script>
+</body>
+</html>

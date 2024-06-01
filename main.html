@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <h1>МастерСтрой</h1>
+        <nav>
+            <ul>
+                <li><a href="main.html" class="cart-button">Главная</a></li>
+                <li><a href="aboutus.html" class="cart-button">Контакты</a></li>
+                <li><a href="cart.html" class="cart-button">Корзина</a></li>
+                <li><button onclick="handleAccountClick()" class="cart-button">Личный кабинет</button></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="catalog">
+            <h2>Каталог продукции</h2>
+            <div class="products-grid" id="products-grid">
+                <!-- Здесь будут отображаться товары -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Продажа строительных материалов</p>
+    </footer>
+
+    <!-- Модальное окно для авторизации -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal('modal')" class="close">&times;</span>
+            <h2>Авторизация</h2>
+            <form id="login-form">
+                <div>
+                    <label for="login-username">Ваше имя:</label>
+                    <input type="text" id="login-username" name="username">
+                </div>
+                <div>
+                    <label for="login-password">Пароль:</label>
+                    <input type="password" id="login-password" name="password">
+                </div>
+                <button class="login-button">Войти</button>
+            </form>
+            <div id="error-message" style="display: none; color: red;"></div>
+            <button class="register-button" onclick="openRegistration()">Регистрация</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal('registerModal')" class="close">&times;</span>
+            <h2>Регистрация</h2>
+            <form id="register-form">
+                <div>
+                    <label for="register-username">Имя пользователя:</label>
+                    <input type="text" id="register-username" name="username" required>
+                </div>
+                <div>
+                    <label for="register-password">Пароль:</label>
+                    <input type="password" id="register-password" name="password" required>
+                </div>
+                <div>
+                    <label for="register-email">Электронная почта:</label>
+                    <input type="email" id="register-email" name="email" required>
+                </div>
+                <div>
+                    <label for="register-number">Номер телефона:</label>
+                    <input type="text" id="register-number" name="number" required>
+                </div>
+                <div>
+                    <label for="register-delivery">Адрес доставки:</label>
+                    <input type="text" id="register-delivery" name="delivery" required>
+                </div>
+                <button type="button" onclick="register()">Зарегистрироваться</button>
+                <button type="button" onclick="closeModal('registerModal')">Закрыть</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Функция для открытия модального окна
+        function openModal() {
+            document.getElementById('modal').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none'; // Очистка сообщения об ошибке при открытии модального окна
+        }
+
+        // Функция для закрытия модального окна
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Функция для регистрации
+        function openRegistration() {
+            closeModal('modal'); // Закрыть окно входа
+            document.getElementById('registerModal').style.display = 'block'; // Открыть окно регистрации
+        }
+
+        function register() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const email = document.getElementById('register-email').value;
+            const number = document.getElementById('register-number').value;
+            const delivery = document.getElementById('register-delivery').value;
+
+            const data = {
+                username: username,
+                password: password,
+                email: email,
+                number: number,
+                delivery: delivery
+            };
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Регистрация прошла успешно');
+                    closeModal('registerModal');
+                } else {
+                    alert('Ошибка при регистрации: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при регистрации:', error);
+            });
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвратить отправку формы по умолчанию
+
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            const data = { username: username, password: password };
+
+            fetch('/clients', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    localStorage.setItem('user', JSON.stringify(data)); // Сохранить информацию о пользователе в localStorage
+                    if (data.isAdmin) {
+                        window.location.href = 'admin_panel.html'; // Перенаправить на страницу администратора
+                    } else {
+                        window.location.href = 'profile.html'; // Перенаправить на страницу пользователя
+                    }
+                } else {
+                    document.getElementById('error-message').textContent = 'Ошибка при проверке учетных данных';
+                    document.getElementById('error-message').style.display = 'block'; // Показать сообщение об ошибке
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при отправке формы:', error);
+            });
+        });
+
+        function handleAccountClick() {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            if (user.isAdmin) {
+                window.location.href = 'admin_panel.html';
+            } else {
+                window.location.href = 'profile.html';
+            }
+        } else {
+            openModal();
+        }
+        }
+
+        
+
+        // Функция для загрузки товаров с сервера и отображения их на странице
+        function loadProducts() {
+            fetch('/products')
+                .then(response => response.json())
+                .then(products => {
+                    const productsGrid = document.getElementById('products-grid');
+                    productsGrid.innerHTML = ''; // Очистить сетку продуктов
+
+                    // Пройтись по каждому продукту и создать элемент для него
+                    products.forEach(product => {
+                        const productElement = document.createElement('div');
+                        productElement.className = 'product-item';
+                        productElement.innerHTML = `
+                            <img src="${product.image}.jpg" alt="${product.image}" style="width:200px;height:180px;">
+                            <h3>${product.Name}</h3>
+                            <p>${product.description}</p>
+                            <p class="price">${product.Price} руб.</p>
+                            <div class="quantity-container">
+                                <button class="cart-button" onclick="addToCart(${product.product_id})">Добавить в корзину</button>
+                            </div>
+                        `;
+                        productsGrid.appendChild(productElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке продуктов:', error);
+                });
+        }
+
+        // Функция для добавления товара в корзину
+            function addToCart(product_id) {
+        const authInfo = JSON.parse(localStorage.getItem('user')); // Получаем данные аутентификации из localStorage
+        if (!authInfo || !authInfo.client_id) {
+            alert('Пожалуйста, войдите в свой аккаунт, чтобы добавить товар в корзину.');
+            openModal(); // Открываем модальное окно для входа
+            return;
+        }
+
+        const client_id = authInfo.client_id; // Извлекаем идентификатор клиента из данных аутентификации
+        const quantityInput = document.getElementById(`${product_id}`);
+        //const quantity = parseInt(quantityInput.value); // Получаем количество товара, указанное пользователем
+
+// Проверяем корректность productId
+        if (!product_id || isNaN(product_id)) {
+                console.error('Некорректный идентификатор товара');
+                console.log(product_id);
+                return;
+            }
+
+        // Отправляем запрос на сервер для добавления товара в корзину или увеличения количества товара, если он уже был добавлен
+        fetch('/add-or-update-cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: client_id,
+                product_id: product_id, // Передаём productId правильно
+                quantity: 1
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(data.message);
+            } else {
+                console.error('Ошибка при добавлении товара в корзину');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при отправке запроса на добавление товара в корзину:', error);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadProducts();
+    });
+
+    </script>
+</body>
+</html>

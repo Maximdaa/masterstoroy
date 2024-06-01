@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакты</title>
+    <link rel="stylesheet" href="style4.css">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=9a8b8fee-2428-47b4-b943-7095743ed580&lang=ru_RU" type="text/javascript"></script>
+    <script type="text/javascript">
+        function init() {
+            // Координаты вашего магазина
+            const shopLocation = [60.003460, 30.301053];
+
+            // Создание карты
+            const map = new ymaps.Map("map", {
+                center: shopLocation,
+                zoom: 14
+            });
+
+            // Добавление метки на карту
+            const placemark = new ymaps.Placemark(shopLocation, {
+                hintContent: 'Наш магазин',
+                balloonContent: 'Мы здесь!'
+            });
+
+            map.geoObjects.add(placemark);
+        }
+
+        ymaps.ready(init);
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Как связаться с нами</h1>
+        <nav>
+            <ul>
+                <li><a href="main.html" class="cart-button">Главная</a></li>
+                <li><a href="aboutus.html" class="cart-button">Контакты</a></li>
+                <li><a href="cart.html" class="cart-button">Корзина</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="about-us">
+            <h2>О нас</h2>
+            <p>Мы являемся одним из ведущих поставщиков строительных материалов в нашем регионе. У нас вы можете найти широкий ассортимент высококачественных строительных материалов по доступным ценам.</p>
+            <p>Наш магазин предлагает широкий выбор строительных материалов, включая кирпич, цемент, краску, доски, керамическую плитку, монтажную пену и многое другое.</p>
+            <p>Мы гордимся нашими профессиональными консультантами, которые помогут вам с выбором материалов и ответят на все ваши вопросы.</p>
+        </section>
+        <section class="map-section">
+            <h2>Наше местоположение</h2>
+            <div id="map" class="map"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Продажа строительных материалов</p>
+    </footer>
+</body>
+</html>

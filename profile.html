@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <link rel="stylesheet" href="style3.css">
+</head>
+<body>
+    <header>
+        <h1>Личный кабинет</h1>
+        <nav>
+            <ul>
+                <li><a href="main.html" class="cart-button">Главная</a></li>
+                <li><a href="aboutus.html" class="cart-button">Контакты</a></li>
+                <li><a href="cart.html" class="cart-button">Корзина</a></li>
+                <li><button onclick="localStorageClear()" class="cart-button">Выйти из аккаунта</button></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="profile-info">
+            <h2>Информация о пользователе</h2>
+            <div class="user-info" id="user-info">
+                
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Продажа строительных материалов</p>
+    </footer>
+
+    <script>
+        function loadInfo(){
+            const authInfo = JSON.parse(localStorage.getItem('user')); // Получаем данные аутентификации из localStorage
+            const client_id = authInfo.client_id; // Извлекаем идентификатор клиента из данных аутентификации
+
+            const data = {client_id: client_id};
+            fetch(`/user?client_id=${client_id}`, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+                .then(profileData => {
+                    const userInfo = document.getElementById('user-info');
+                    userInfo.innerHTML = ''; // Очистить содержимое профиля
+
+                    profileData.forEach(user => {
+                        // Создать элементы для отображения информации о пользователе
+                        const profileElement = document.createElement('div');
+                        profileElement.className = 'profile-item';
+                        profileElement.innerHTML = `
+                            <p>Имя: <span id="username">${user.username}</span> <button onclick="editUserInfo('username', )">Изменить</button></p>
+                            <p>Email: <span id="email">${user.email}</span> <button onclick="editUserInfo('email', )">Изменить</button></p>
+                            <p>Телефон: <span id="phone">${user.Phone_number}</span> <button onclick="editUserInfo('Phone_number', )">Изменить</button></p>
+                            <p>Адрес доставки: <span id="address">${user.Address}</span> <button onclick="editUserInfo('Address', )">Изменить</button></p>
+                            <button onclick="editUserInfo('password', )">Изменить пароль</button>
+                        `;
+                        userInfo.appendChild(profileElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке данных пользователя:', error);
+                });
+        }
+      
+        function editUserInfo(field) {
+            const newValue = prompt(`Введите новое значение для ${field}:`);
+            if (newValue === null) {
+                return; // Если пользователь нажал "Отмена", выходим из функции
+            }
+            console.log(newValue);
+            const authInfo = JSON.parse(localStorage.getItem('user')); // Получаем данные аутентификации из localStorage
+            const client_id = authInfo.client_id; // Извлекаем идентификатор клиента из данных аутентификации
+
+            const data = {
+                client_id: client_id,
+                field: field,
+                value: newValue
+            };
+
+            fetch('/updateUser', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Данные пользователя успешно обновлены: ${field} => ${newValue}`);
+                    // После успешного обновления, перезагружаем информацию о пользователе
+                    loadInfo();
+                } else {
+                    console.error('Ошибка при обновлении данных пользователя');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при отправке запроса:', error);
+            });
+        }
+
+        function localStorageClear(){
+            localStorage.clear();
+            window.location.href = 'main.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadInfo);
+    </script>
+</body>
+</html>

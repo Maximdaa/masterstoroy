@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <!-- Подключаем стили -->
+    <link rel="stylesheet" href="/admin_styles.css">
+</head>
+<body>
+    <h1>Админ панель</h1>
+    <nav>
+        <ul>
+            <li><button onclick="handleAccountClick()" class="cart-button">Выход</button></li>
+        </ul>
+    </nav>
+
+    <!-- Форма для добавления нового товара -->
+    <h2>Add New Product</h2>
+    <form id="add-product-form">
+        <label for="product-name">Product Name:</label>
+        <input type="text" id="product-name" name="productName">
+        <label for="product-price">Price:</label>
+        <input type="text" id="product-price" name="productPrice">
+        <label for="product-name">Category:</label>
+        <input type="text" id="product-category" name="productCategory">
+        <label for="product-description">Description:</label>
+        <input type="text" id="product-description" name="productDescription">
+        <label for="product-image">Image:</label>
+        <input type="text" id="product-image" name="productImage">
+        <button type="submit">Add Product</button>
+    </form>
+
+    <!-- Кнопка для создания отчета -->
+    <h2>Generate Report</h2>
+    <button onclick="generateQuarterlyReport()" class="report-button">Скачать отчет за последний квартал (PDF)</button>
+
+    <!-- Список товаров -->
+    <h2>Product List</h2>
+    <ul id="product-list"></ul>
+
+    <!-- JavaScript скрипт для обработки форм и загрузки данных -->
+    <script>
+        console.log('Админ панель запущена');
+        document.getElementById('add-product-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
+            // Получаем значения полей ввода
+            const productName = document.getElementById('product-name').value;
+            const productPrice = document.getElementById('product-price').value;
+            const productCategory = document.getElementById('product-category').value;
+            const productDescription = document.getElementById('product-description').value;
+            const productImage = document.getElementById('product-image').value;
+
+            const data = { 
+                Name: productName, 
+                Price: productPrice, 
+                Category_id: productCategory, 
+                Description: productDescription, 
+                Image: productImage 
+            };
+
+            // Отправляем данные на сервер для добавления нового товара
+            fetch('/add-product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadProducts();
+                } else {
+                    alert('Ошибка при добавлении товара');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при добавлении товара:', error);
+            });
+        });
+
+        // Функция для загрузки списка товаров
+        function loadProducts() {
+            fetch('/products')
+                .then(response => response.json())
+                .then(products => {
+                    const productList = document.getElementById('product-list');
+                    productList.innerHTML = ''; // Очищаем список перед обновлением
+
+                    // Добавляем каждый товар в список
+                    products.forEach(product => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${product.Name}: ${product.Price} руб`;
+                        productList.appendChild(listItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке списка товаров:', error);
+                });
+        }
+
+        function handleAccountClick(){
+            localStorage.clear();
+            window.location.href = 'main.html';
+        }
+
+        // Функция для генерации квартального отчета
+        function generateQuarterlyReport() {
+            window.location.href = '/generate_quarterly_report';
+        }
+
+        // Загружаем список товаров при загрузке страницы
+        document.addEventListener('DOMContentLoaded', loadProducts);
+
+    </script>
+
+</body>
+</html>
